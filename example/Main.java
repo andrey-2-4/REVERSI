@@ -1,6 +1,5 @@
 package org.example;
 
-import java.util.Queue;
 import java.util.Scanner;
 
 /**
@@ -25,10 +24,9 @@ public class Main {
                 case PVE_HARD_MODE -> board.playHardMode();
                 case PVP_MODE -> board.playAgainstPlayerMode();
                 case BEST_RESULT_MODE -> board.displayBestScore();
-                case QUIT_GAME_MODE -> {
-                    stillWantToPlay = false;
-                }
+                case QUIT_GAME_MODE -> stillWantToPlay = false;
             }
+            System.out.println();
         }
     }
 

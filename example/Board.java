@@ -290,7 +290,7 @@ public class Board {
             displayBoard(true);
             displayPossibleMoves();
             System.out.println("Ход Игрока " + playerNumber + " [введите координаты вашего хода в формате 'x y']");
-            int x = -2, y = -2;
+            int x, y;
             while (true) {
                 try {
                     String string = SCANNER.nextLine();
@@ -330,15 +330,119 @@ public class Board {
 
     private void makeMoveByComputer(boolean isEasyMode) {
         if (updateBoardOfPossibleMoves(2)) {
-            // выводить не надо, просто меняем параметры доски
             if (isEasyMode) {
-                // TODO
+                makeEasyMove();
             } else {
-                // TODO
+                makeHardMove();
             }
             System.out.println("Компьютер сходил");
         } else {
             System.out.println("Компьютер не может ходить, ход передается");
+        }
+    }
+
+    private void makeEasyMove() {
+        double maxValue = 0;
+        double temp;
+        Vector<Integer> indexesVector = new Vector<>();
+        Vector<Integer> tempIndexesVector;
+        int x = -2, y = -2;
+        for (int i = 0; i < 8; ++i) {
+            for (int j = 0; j < 8; ++j) {
+                if (boardOfPossibleMoves[i][j]) {
+                    tempIndexesVector = getIndexesOfClampedCells(2, i, j);
+                    temp = valueOfAMove(tempIndexesVector, i, j);
+                    maxValue = Math.max(maxValue, temp);
+                    if (maxValue == temp) {
+                        x = i;
+                        y = j;
+                        indexesVector = new Vector<>(tempIndexesVector);
+                    }
+                }
+            }
+        }
+        board[x][y] = 2;
+        for (int i = 0; i < indexesVector.size(); i = i + 2) {
+            board[indexesVector.get(i)][indexesVector.get(i + 1)] = 2;
+        }
+    }
+
+    private double valueOfAMove(Vector<Integer> indexes, int x, int y) {
+        double ans = 0;
+        if (x == 0 || x == 7) {
+            ans += 0.4;
+        }
+        if (y == 0 || y == 7) {
+            ans += 0.4;
+        }
+        for (int i = 0; i < indexes.size(); i += 2) {
+            if (indexes.get(i) == 0 || indexes.get(i) == 7 || indexes.get(i + 1) == 0 || indexes.get(i + 1) == 7) {
+                ans += 1;
+            }
+            ans += 1;
+        }
+        return ans;
+    }
+
+    private void makeHardMove() {
+        int[][] tempBoard = new int[8][8];
+        boolean[][] tempBoardOfPossibleMoves = new boolean[8][8];
+        for (int i = 0; i < 8; ++i) {
+            for (int j = 0; j < 8; ++j) {
+                tempBoard[i][j] = board[i][j];
+                tempBoardOfPossibleMoves[i][j] = boardOfPossibleMoves[i][j];
+            }
+        }
+        double maxValue = -64000;
+        double temp;
+        Vector<Integer> indexesVector = new Vector<>();
+        Vector<Integer> tempIndexesVector;
+        int x = -2, y = -2;
+        for (int i = 0; i < 8; ++i) {
+            for (int j = 0; j < 8; ++j) {
+                if (boardOfPossibleMoves[i][j]) {
+                    // делаем 1 шаг
+                    tempIndexesVector = getIndexesOfClampedCells(2, i, j);
+                    temp = valueOfAMove(tempIndexesVector, i, j);
+                    board[i][j] = 2;
+                    for (int k = 0;  k < tempIndexesVector.size(); k = k + 2) {
+                        board[tempIndexesVector.get(k)][tempIndexesVector.get(k + 1)] = 2;
+                    }
+                    // делаем 2 шаг
+                    double maxxValue = 0;
+                    double ttemp;
+                    Vector<Integer> ttempIndexesVector;
+
+                    for (int k = 0; k < 8; ++k) {
+                        for (int m = 0; m < 8; ++m) {
+                            if (boardOfPossibleMoves[k][m]) {
+                                ttempIndexesVector = getIndexesOfClampedCells(2, k, m);
+                                ttemp = valueOfAMove(ttempIndexesVector, k, m);
+                                maxxValue = Math.max(maxxValue, ttemp);
+                            }
+                        }
+                    }
+                    temp -= maxxValue;
+
+                    maxValue = Math.max(maxValue, temp);
+                    if (maxValue == temp) {
+                        x = i;
+                        y = j;
+                        indexesVector = new Vector<>(tempIndexesVector);
+                    }
+                    // возвращем все как было
+                    for (int m = 0; m < 8; ++m) {
+                        for (int k = 0; k < 8; ++k) {
+                            board[m][k] = tempBoard[m][k];
+                            boardOfPossibleMoves[m][k] = tempBoardOfPossibleMoves[m][k];
+                        }
+                    }
+                }
+            }
+        }
+        board[x][y] = 2;
+        for (int i = 0; i < indexesVector.size(); i = i + 2) {
+            board[indexesVector.get(i)][indexesVector.get(i + 1)] = 2;
         }
     }
 
